@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ELUXE | Premium Hookah Experience</title>
+    <meta name="description"
+        content="Experience the pinnacle of luxury with ELUXE hookahs. Exquisite craftsmanship, premium materials, and unparalleled design.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Inter:wght@300;400;500;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="#" class="logo">ELUXE</a>
+            <ul class="nav-links">
+                <li><a href="#home">Home</a></li>
+                <li><a href="#products">Collection</a></li>
+                <li><a href="#about">Our Story</a></li>
+            </ul>
+            <div class="nav-icons">
+                <button id="cart-btn" class="cart-icon">
+                    <i class="fa-solid fa-bag-shopping"></i>
+                    <span class="cart-count">0</span>
+                </button>
+                <div class="mobile-menu-btn">
+                    <i class="fa-solid fa-bars"></i>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        <div class="hero-video-container">
+            <video autoplay muted loop playsinline class="hero-video">
+                <source src="images/A_premium_cinematic_1080p_202601202354.mp4" type="video/mp4">
+            </video>
+            <div class="hero-overlay"></div>
+        </div>
+        <div class="hero-content container">
+            <h1 class="fade-in">Excellence in Every Breath</h1>
+            <p class="fade-in delay-1">Discover the world's most exclusive collection of designer hookahs.</p>
+            <a href="#products" class="btn btn-gold fade-in delay-2">Shop Collection</a>
+        </div>
+    </section>
+
+    <!-- Featured Section -->
+    <section id="products" class="products-section container">
+        <div class="section-header">
+            <h2>The Signature Collection</h2>
+            <div class="gold-line"></div>
+        </div>
+        <div id="product-grid" class="product-grid">
+            <!-- Products will be injected by JavaScript -->
+        </div>
+    </section>
+
+    <!-- Product Detail Modal -->
+    <div id="product-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <div class="modal-body" id="modal-body">
+                <!-- Product details injected by JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Cart Sidebar -->
+    <div id="cart-sidebar" class="cart-sidebar">
+        <div class="cart-header">
+            <h3>Your Selection</h3>
+            <button class="close-cart"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="cart-items" id="cart-items">
+            <!-- Cart items injected by JS -->
+        </div>
+
+        <div id="checkout-form-container" class="checkout-form-container">
+            <h4>Delivery Details</h4>
+            <form id="checkout-form">
+                <div class="form-group">
+                    <input type="text" id="full-name" placeholder="Full Name" required>
+                </div>
+                <div class="form-group">
+                    <input type="email" id="email" placeholder="Email Address" required>
+                </div>
+                <div class="form-group">
+                    <textarea id="address" placeholder="Shipping Address" rows="3" required></textarea>
+                </div>
+                <div class="form-row">
+                    <input type="text" id="city" placeholder="City" required>
+                    <input type="text" id="zip" placeholder="Zip Code" required>
+                </div>
+            </form>
+        </div>
+
+        <div class="cart-footer">
+            <div class="cart-total">
+                <span>Total</span>
+                <span id="cart-total-price">$0.00</span>
+            </div>
+            <button class="btn btn-gold btn-block">Checkout</button>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container footer-content">
+            <div class="footer-brand">
+                <a href="#" class="logo">ELUXE</a>
+                <p>Crafting luxury experiences for the sophisticated connoisseur.</p>
+            </div>
+            <div class="footer-links">
+                <h4>Quick Links</h4>
+                <ul>
+                    <li><a href="#">Privacy Policy</a></li>
+                    <li><a href="#">Terms of Service</a></li>
+                    <li><a href="#">Shipping & Returns</a></li>
+                </ul>
+            </div>
+            <div class="footer-social">
+                <h4>Connect With Us</h4>
+                <div class="contact-info">
+                    <p><i class="fa-solid fa-location-dot"></i> 72nd Gold Avenue, Dubai, UAE</p>
+                    <p><i class="fa-solid fa-phone"></i> +971 50 123 4567</p>
+                    <p><i class="fa-solid fa-envelope"></i> concierge@eluxe-hookah.com</p>
+                </div>
+                <div class="social-icons" style="margin-top: 1.5rem;">
+                    <a href="#"><i class="fa-brands fa-instagram"></i></a>
+                    <a href="#"><i class="fa-brands fa-facebook"></i></a>
+                    <a href="#"><i class="fa-brands fa-pinterest"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 ELUXE Hookah. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
