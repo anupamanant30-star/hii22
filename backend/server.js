@@ -219,3 +219,5 @@ app.post('/api/checkout', (req, res) => {
 app.listen(PORT, () => {
     console.log(`ELUXE Backend running at http://localhost:${PORT}`);
 });
+
+module.exports = app;
