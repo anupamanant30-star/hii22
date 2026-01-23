@@ -375,14 +375,16 @@ a {
 }
 
 .features-list li {
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.8rem;
     display: flex;
-    align-items: center;
-    gap: 10px;
+    align-items: flex-start;
+    gap: 12px;
+    font-size: 0.95rem;
 }
 
 .features-list i {
     color: var(--gold);
+    margin-top: 4px;
 }
 
 /* Cart Sidebar */
@@ -581,20 +583,23 @@ a {
 
 /* Mobile & Tablet (Up to 900px) */
 @media (max-width: 900px) {
+    .container {
+        padding: 0 1.5rem;
+    }
+
     .nav-links {
         position: fixed;
         top: 0;
         right: -100%;
         width: 100%;
-        /* Full width for cleaner mobile feel */
         height: 100vh;
-        background: var(--black);
-        /* Darker background for menu */
+        background: rgba(10, 10, 10, 0.98);
+        backdrop-filter: blur(15px);
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        gap: 2rem;
-        transition: 0.5s cubic-bezier(0.77, 0.2, 0.05, 1.0);
+        gap: 2.5rem;
+        transition: 0.6s cubic-bezier(0.77, 0.2, 0.05, 1.0);
         z-index: 999;
     }
 
@@ -602,16 +607,33 @@ a {
         right: 0;
     }
 
+    .nav-links a {
+        font-size: 1.5rem;
+        letter-spacing: 4px;
+    }
+
     .mobile-menu-btn {
         display: block;
+        z-index: 1001;
+        /* Ensure button is always above the menu */
     }
 
     .hero h1 {
-        font-size: 3rem;
+        font-size: 3.5rem;
     }
 
     .product-grid {
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 2rem;
+    }
+
+    .modal-content {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        max-width: none;
+        overflow-y: auto;
+        border: none;
     }
 
     .modal-body {
@@ -621,35 +643,85 @@ a {
     .modal-left,
     .modal-right {
         min-width: 100%;
+        flex: none;
+    }
+
+    .modal-left {
+        height: 50vh;
     }
 
     .modal-right {
-        padding: 2.5rem;
+        padding: 3rem 1.5rem;
     }
 
     .modal-right h2 {
         font-size: 2.2rem;
     }
 
+    .close-modal {
+        right: 1.5rem;
+        top: 1rem;
+        background: rgba(0, 0, 0, 0.5);
+        color: white;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        font-size: 1.5rem;
+    }
+
     .auth-modal-content {
-        width: 90%;
-        padding: 2rem !important;
+        width: 95%;
+        padding: 2.5rem 1.5rem !important;
+        margin: 10% auto;
+        height: auto;
     }
 }
 
 /* Small Mobile (Up to 500px) */
 @media (max-width: 500px) {
+    .navbar {
+        padding: 1rem 0;
+    }
+
+    .logo {
+        font-size: 1.5rem;
+    }
+
+    .nav-icons {
+        gap: 1rem;
+    }
+
+    .hero-content {
+        padding: 0 1rem;
+    }
+
     .hero h1 {
-        font-size: 2.5rem;
+        font-size: 2.2rem;
+    }
+
+    .hero p {
+        font-size: 1rem;
+    }
+
+    .section-header {
+        margin-bottom: 3rem;
     }
 
     .section-header h2 {
         font-size: 2rem;
     }
 
+    .product-image {
+        height: 350px;
+    }
+
     .cart-sidebar {
         width: 100%;
         right: -100%;
+        padding: 1.5rem;
     }
 
     .footer-content {
@@ -664,6 +736,14 @@ a {
 
     .social-icons {
         justify-content: center;
+    }
+
+    .modal-right h2 {
+        font-size: 1.8rem;
+    }
+
+    .product-price {
+        font-size: 1.5rem;
     }
 }
 
