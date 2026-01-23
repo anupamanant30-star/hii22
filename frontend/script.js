@@ -51,7 +51,7 @@ async function fetchProducts() {
     }
 }
 
-// Handle Checkout with Razorpay
+// Handle Checkout
 async function processCheckout() {
     if (cart.length === 0) {
         alert("Your selection is empty.");
@@ -73,11 +73,7 @@ async function processCheckout() {
     const total = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
     const customer = { name, email, address, city, zip };
 
-    checkoutBtn.textContent = "Processing...";
-    checkoutBtn.disabled = true;
-
     try {
-        // 1. Create Order on Server
         const response = await fetch('/api/checkout', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -88,86 +84,67 @@ async function processCheckout() {
             })
         });
 
-        const order = await response.json();
+        const result = await response.json();
 
-        if (!order.success) {
-            throw new Error(order.message || "Failed to create order");
+        if (result.success) {
+            alert(`SUCCESS!\nOrder ID: ${result.orderId}\n${result.message}`);
+            // Clear form
+            document.getElementById('checkout-form').reset();
+            cart = [];
+            saveCart();
+            updateCartUI();
+            closeCartSidebar();
         }
-
-        // 2. Open Razorpay Checkout
-        const options = {
-            key: order.keyId,
-            amount: order.amount,
-            currency: order.currency,
-            name: "ELUXE Hookah",
-            description: "Premium Purchase",
-            order_id: order.orderId,
-            handler: async function (response) {
-                // 3. Verify Payment on Server
-                const verifyRes = await fetch('/api/verify-payment', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        razorpay_order_id: response.razorpay_order_id,
-                        razorpay_payment_id: response.razorpay_payment_id,
-                        razorpay_signature: response.razorpay_signature
-                    })
-                });
-
-                const verifyResult = await verifyRes.json();
-
-                if (verifyResult.success) {
-                    alert("PAYMENT SUCCESSFUL! Welcome to the ELUXE family.");
-                    document.getElementById('checkout-form').reset();
-                    cart = [];
-                    saveCart();
-                    updateCartUI();
-                    closeCartSidebar();
-                } else {
-                    alert("Payment verification failed. Please contact support.");
-                }
-            },
-            prefill: {
-                name: name,
-                email: email
-            },
-            theme: {
-                color: "#c5a059" // ELUXE Gold
-            }
-        };
-
-        const rzp = new Razorpay(options);
-        rzp.open();
-
     } catch (error) {
         console.error("Checkout error:", error);
-        alert("Checkout failed: " + error.message);
-    } finally {
-        checkoutBtn.textContent = "Checkout";
-        checkoutBtn.disabled = false;
+        alert("Checkout failed. Is the backend server running?");
     }
 }
 
 
-// Render Product Grid
+// Render Product Grid with Animated Reveal
 function renderProducts() {
     if (!productGrid) return;
-    productGrid.innerHTML = products.map(product => `
-        <div class="product-card" onclick="openProductDetail(${product.id})">
+    productGrid.innerHTML = products.map((product, index) => `
+        <div class="product-card" id="card-${product.id}">
             <div class="product-image">
                 <img src="${product.image}" alt="${product.name}">
-                <div class="add-to-cart-overlay">
-                    <button class="btn btn-gold btn-block" onclick="event.stopPropagation(); addToCart(${product.id})">
-                        Add To Cart
-                    </button>
-                </div>
             </div>
             <div class="product-info">
                 <h3>${product.name}</h3>
-                <span class="product-price">₹${product.price.toLocaleString()}</span>
+                <div class="product-price">₹${product.price.toLocaleString()}</div>
+                <p class="product-description">${product.description}</p>
+                <ul class="features-mini">
+                    ${product.features.slice(0, 3).map(f => `<li><i class="fa-solid fa-circle"></i> ${f}</li>`).join('')}
+                </ul>
+                <button class="btn btn-gold" onclick="addToCart(${product.id})">
+                    Pre-Order Now
+                </button>
             </div>
         </div>
     `).join('');
+
+    // Setup Scroll Reveal
+    setupScrollReveal();
+}
+
+function setupScrollReveal() {
+    const cards = document.querySelectorAll('.product-card');
+    const observerOptions = {
+        threshold: 0.2,
+        rootMargin: "0px 0px -50px 0px"
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('revealed');
+                observer.unobserve(entry.target); // Reveal once
+            }
+        });
+    }, observerOptions);
+
+    cards.forEach(card => observer.observe(card));
 }
 
 // Cart Functions
@@ -410,48 +387,4 @@ if (sendOtpBtn) sendOtpBtn.addEventListener('click', sendOtp);
 if (verifyOtpBtn) verifyOtpBtn.addEventListener('click', verifyOtp);
 if (finishAuthBtn) finishAuthBtn.addEventListener('click', closeAuthModalWindow);
 
-// --- LUXURY PARALLAX EFFECT FOR HERO VIDEO ---
-const heroVideo = document.querySelector('.hero-video');
-let mouseX = 0;
-let mouseY = 0;
-let currentX = 0;
-let currentY = 0;
-
-// Configuration
-const movementRange = 40; // Increased for better visibility (±40px)
-const lerpFactor = 0.08;   // Slightly increased for a more "active" response
-
-// Track mouse position
-window.addEventListener('mousemove', (e) => {
-    // Calculate position from center (-1 to 1)
-    mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
-    mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
-});
-
-function animateParallax() {
-    // Only apply on screens wider than 1024px (Disable on mobile)
-    if (window.innerWidth > 1024) {
-        // Interpolate (Lerp) values for buttery smooth movement
-        currentX += (mouseX - currentX) * lerpFactor;
-        currentY += (mouseY - currentY) * lerpFactor;
-
-        // Calculate final translation
-        const translateX = currentX * movementRange;
-        const translateY = currentY * movementRange;
-
-        // Apply transform using translate3d for GPU acceleration
-        // Includes initial scale(1.1) to avoid black edges
-        if (heroVideo) {
-            heroVideo.style.transform = `scale(1.1) translate3d(${translateX}px, ${translateY}px, 0)`;
-        }
-    } else {
-        // Reset transform on mobile
-        if (heroVideo) heroVideo.style.transform = `scale(1.1) translate3d(0, 0, 0)`;
-    }
-
-    requestAnimationFrame(animateParallax);
-}
-
-// Start the animation loop
-animateParallax();
 

@@ -5,9 +5,6 @@ const fs = require('fs');
 const useragent = require('express-useragent');
 const requestIp = require('request-ip');
 const nodemailer = require('nodemailer');
-const admin = require('firebase-admin');
-const Razorpay = require('razorpay');
-const crypto = require('crypto');
 require('dotenv').config();
 
 const app = express();
@@ -17,27 +14,7 @@ const PORT = process.env.PORT || 3000;
 app.use(bodyParser.json());
 app.use(useragent.express());
 app.use(requestIp.mw());
-app.get('/api/products', (req, res) => {
-    res.json(products);
-});
-
-// --- Firebase Initialization ---
-const serviceAccountPath = path.join(__dirname, 'serviceAccountKey.json');
-if (fs.existsSync(serviceAccountPath)) {
-    const serviceAccount = require(serviceAccountPath);
-    admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount)
-    });
-    console.log("🔥 Firebase Admin initialized successfully!");
-} else {
-    console.log("⚠️  Firebase Service Account key not found. Running with mock data.");
-}
-
-// --- Razorpay Initialization ---
-const razorpay = new Razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID,
-    key_secret: process.env.RAZORPAY_KEY_SECRET
-});
+app.use(express.static(path.join(__dirname, '../frontend')));
 
 // --- Email Config ---
 let transporter;
@@ -184,43 +161,22 @@ const users = {
 
 // --- Routes ---
 
-// 1. Get all products (From Firestore if available, else mock)
-app.get('/api/products', async (req, res) => {
-    if (db) {
-        try {
-            const snapshot = await db.collection('products').get();
-            const productsList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            if (productsList.length > 0) return res.json(productsList);
-        } catch (error) {
-            console.error("Firestore Error:", error);
-        }
-    }
-    // Fallback to mock data if Firestore is not ready or empty
+// 1. Get all products
+app.get('/api/products', (req, res) => {
     res.json(products);
 });
 
 // 2. Login & Anomaly Detection
-app.post('/api/login', async (req, res) => {
+app.post('/api/login', (req, res) => {
     const { email } = req.body;
     if (!email) return res.status(400).json({ error: "Email required" });
 
     const clientIp = req.clientIp;
     const device = req.useragent.source;
 
-    let user;
-    if (db) {
-        const userDoc = await db.collection('users').doc(email).get();
-        if (userDoc.exists) {
-            user = userDoc.data();
-        } else {
-            user = { email, lastIp: clientIp, lastDevice: device, otp: null };
-            await db.collection('users').doc(email).set(user);
-        }
-    } else {
-        user = users[email];
-        if (!user) {
-            user = users[email] = { email, lastIp: clientIp, lastDevice: device, otp: null };
-        }
+    let user = users[email];
+    if (!user) {
+        user = users[email] = { email, lastIp: clientIp, lastDevice: device, otp: null };
     }
 
     let anomaly = false;
@@ -230,13 +186,7 @@ app.post('/api/login', async (req, res) => {
 
     // Generate 6-digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-
-    // Save OTP to DB
-    if (db) {
-        await db.collection('users').doc(email).update({ otp: otp });
-    } else {
-        user.otp = otp;
-    }
+    user.otp = otp;
 
     // Send Actual Email
     const mailOptions = {
@@ -260,18 +210,19 @@ app.post('/api/login', async (req, res) => {
         `
     };
 
-    transporter.sendMail(mailOptions, (error, info) => {
-        if (error) {
-            console.error("Email Error:", error);
-        } else {
-            console.log("Email sent: " + info.response);
-            // If using Ethereal, log the preview URL
-            const testUrl = nodemailer.getTestMessageUrl(info);
-            if (testUrl) {
-                console.log(`\n📬 VIEW TEST EMAIL HERE: ${testUrl}\n`);
+    if (transporter) {
+        transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+                console.error("Email Error:", error);
+            } else {
+                console.log("Email sent: " + info.response);
+                const testUrl = nodemailer.getTestMessageUrl(info);
+                if (testUrl) {
+                    console.log(`\n📬 VIEW TEST EMAIL HERE: ${testUrl}\n`);
+                }
             }
-        }
-    });
+        });
+    }
 
     console.log(`\n\n\n*****************************************`);
     console.log(`🚀 VERIFICATION CODE FOR: ${email}`);
@@ -285,115 +236,40 @@ app.post('/api/login', async (req, res) => {
     res.json({
         success: true,
         message: "OTP sent to your email",
-        // otp: otp, // REMOVED FOR SECURITY - Now sent via email only
         anomalyDetected: anomaly
     });
 });
 
 // 3. Verify OTP
-app.post('/api/verify-otp', async (req, res) => {
+app.post('/api/verify-otp', (req, res) => {
     const { email, otp } = req.body;
-    let user;
-
-    if (db) {
-        const userDoc = await db.collection('users').doc(email).get();
-        user = userDoc.exists ? userDoc.data() : null;
-    } else {
-        user = users[email];
-    }
+    const user = users[email];
 
     if (user && user.otp === otp) {
-        if (db) {
-            await db.collection('users').doc(email).update({
-                otp: null,
-                lastIp: req.clientIp,
-                lastDevice: req.useragent.source
-            });
-        } else {
-            user.otp = null;
-            user.lastIp = req.clientIp;
-            user.lastDevice = req.useragent.source;
-        }
+        user.otp = null;
+        user.lastIp = req.clientIp;
+        user.lastDevice = req.useragent.source;
         res.json({ success: true, message: "Verification successful" });
     } else {
         res.status(400).json({ success: false, message: "Invalid OTP" });
     }
 });
 
-// 4. Create Razorpay Order
-app.post('/api/checkout', async (req, res) => {
+// 4. Mock Checkout Process
+app.post('/api/checkout', (req, res) => {
     const { items, total, customer } = req.body;
 
     if (!items || items.length === 0) {
         return res.status(400).json({ error: "No items in cart" });
     }
 
-    try {
-        // Amount in paise (multiply by 100)
-        const amount = Math.round(total * 100);
+    const orderId = 'ELX-' + Math.random().toString(36).substr(2, 9).toUpperCase();
 
-        const options = {
-            amount: amount,
-            currency: "INR",
-            receipt: 'ELX-' + Math.random().toString(36).substr(2, 9).toUpperCase(),
-        };
-
-        const rzpOrder = await razorpay.orders.create(options);
-
-        // Store pending order in Firebase if active
-        if (db) {
-            await db.collection('orders').doc(rzpOrder.id).set({
-                orderId: rzpOrder.id,
-                receipt: options.receipt,
-                items,
-                total,
-                customer,
-                status: 'created',
-                createdAt: new Date().toISOString()
-            });
-        }
-
-        res.json({
-            success: true,
-            keyId: process.env.RAZORPAY_KEY_ID,
-            orderId: rzpOrder.id,
-            amount: rzpOrder.amount,
-            currency: rzpOrder.currency
-        });
-
-    } catch (error) {
-        console.error("Razorpay Order Error:", error);
-        res.status(500).json({ success: false, message: "Could not initiate payment." });
-    }
-});
-
-// 5. Verify Payment Signature
-app.post('/api/verify-payment', async (req, res) => {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
-
-    const body = razorpay_order_id + "|" + razorpay_payment_id;
-
-    const expectedSignature = crypto
-        .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
-        .update(body.toString())
-        .digest('hex');
-
-    const isSignatureValid = expectedSignature === razorpay_signature;
-
-    if (isSignatureValid) {
-        // Update order status in Firebase
-        if (db) {
-            await db.collection('orders').doc(razorpay_order_id).update({
-                status: 'paid',
-                paymentId: razorpay_payment_id,
-                paidAt: new Date().toISOString()
-            });
-        }
-
-        res.json({ success: true, message: "Payment verified successfully" });
-    } else {
-        res.status(400).json({ success: false, message: "Invalid payment signature" });
-    }
+    res.json({
+        success: true,
+        orderId: orderId,
+        message: "Order placed successfully! Welcome to the ELUXE family."
+    });
 });
 
 app.listen(PORT, () => {

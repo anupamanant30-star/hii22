@@ -14,7 +14,6 @@
         rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 </head>
 
 <body>
@@ -44,17 +43,21 @@
 
     <!-- Hero Section -->
     <section id="home" class="hero">
-        <div class="hero-video-container">
-            <video autoplay muted loop playsinline class="hero-video">
-                <source src="images/A_premium_cinematic_1080p_202601202354.mp4" type="video/mp4">
-            </video>
-            <div class="hero-overlay"></div>
-        </div>
+        <video autoplay muted loop playsinline class="hero-video-bg">
+            <source src="images/Ultrarealistic_dense_smoke_1080p_20260124022.mp4" type="video/mp4">
+        </video>
+        <div class="hero-overlay"></div>
         <div class="hero-content container">
             <h1 class="fade-in">Excellence in Every Breath</h1>
             <p class="fade-in delay-1">Discover the world's most exclusive collection of designer hookahs.</p>
             <a href="#products" class="btn btn-gold fade-in delay-2">Shop Collection</a>
         </div>
+        <div class="scroll-indicator fade-in delay-2">
+            <span>Scroll Discover</span>
+            <i class="fa-solid fa-chevron-down"></i>
+        </div>
+    </section>
+
     </section>
 
     <!-- Featured Section -->
@@ -189,6 +192,7 @@
     </div>
 
     <script src="script.js"></script>
+    <script>console.log("💎 ELUXE scripts loaded successfully");</script>
 </body>
 
 </html>
