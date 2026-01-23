@@ -51,7 +51,7 @@ async function fetchProducts() {
     }
 }
 
-// Handle Checkout
+// Handle Checkout with Razorpay
 async function processCheckout() {
     if (cart.length === 0) {
         alert("Your selection is empty.");
@@ -73,7 +73,11 @@ async function processCheckout() {
     const total = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
     const customer = { name, email, address, city, zip };
 
+    checkoutBtn.textContent = "Processing...";
+    checkoutBtn.disabled = true;
+
     try {
+        // 1. Create Order on Server
         const response = await fetch('/api/checkout', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -84,22 +88,66 @@ async function processCheckout() {
             })
         });
 
-        const result = await response.json();
+        const order = await response.json();
 
-        if (result.success) {
-            alert(`SUCCESS!\nOrder ID: ${result.orderId}\n${result.message}`);
-            // Clear form
-            document.getElementById('checkout-form').reset();
-            cart = [];
-            saveCart();
-            updateCartUI();
-            closeCartSidebar();
+        if (!order.success) {
+            throw new Error(order.message || "Failed to create order");
         }
+
+        // 2. Open Razorpay Checkout
+        const options = {
+            key: order.keyId,
+            amount: order.amount,
+            currency: order.currency,
+            name: "ELUXE Hookah",
+            description: "Premium Purchase",
+            order_id: order.orderId,
+            handler: async function (response) {
+                // 3. Verify Payment on Server
+                const verifyRes = await fetch('/api/verify-payment', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        razorpay_order_id: response.razorpay_order_id,
+                        razorpay_payment_id: response.razorpay_payment_id,
+                        razorpay_signature: response.razorpay_signature
+                    })
+                });
+
+                const verifyResult = await verifyRes.json();
+
+                if (verifyResult.success) {
+                    alert("PAYMENT SUCCESSFUL! Welcome to the ELUXE family.");
+                    document.getElementById('checkout-form').reset();
+                    cart = [];
+                    saveCart();
+                    updateCartUI();
+                    closeCartSidebar();
+                } else {
+                    alert("Payment verification failed. Please contact support.");
+                }
+            },
+            prefill: {
+                name: name,
+                email: email
+            },
+            theme: {
+                color: "#c5a059" // ELUXE Gold
+            }
+        };
+
+        const rzp = new Razorpay(options);
+        rzp.open();
+
     } catch (error) {
         console.error("Checkout error:", error);
-        alert("Checkout failed. Is the backend server running?");
+        alert("Checkout failed: " + error.message);
+    } finally {
+        checkoutBtn.textContent = "Checkout";
+        checkoutBtn.disabled = false;
     }
 }
+
 
 // Render Product Grid
 function renderProducts() {
@@ -300,10 +348,7 @@ async function sendOtp() {
             authStep1.style.display = 'none';
             authStep2.style.display = 'block';
 
-            // DIAGNOSTIC ALERT: Showing the OTP directly in case terminal is hidden
-            alert(`DIAGNOSTIC MODE: Your OTP is ${result.otp}\n(It is also logged in your backend terminal)`);
-
-            console.log("OTP Sent!", result.otp);
+            console.log("OTP Sent!");
             if (result.anomalyDetected) {
                 anomalyAlert.style.display = 'block';
             } else {

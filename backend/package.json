@@ -13,8 +13,13 @@
   "type": "commonjs",
   "dependencies": {
     "body-parser": "^2.2.2",
+    "crypto": "^1.0.1",
+    "dotenv": "^17.2.3",
     "express": "^5.2.1",
     "express-useragent": "^2.0.2",
+    "firebase-admin": "^13.6.0",
+    "nodemailer": "^7.0.12",
+    "razorpay": "^2.9.6",
     "request-ip": "^3.3.0"
   }
 }
